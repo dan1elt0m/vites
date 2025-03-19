@@ -1,6 +1,5 @@
 import pytest
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql import Row
 from vites import run_benchmark
 from vites.test_utils import TestBenchmarkSchema
 
@@ -16,14 +15,17 @@ def spark():
 
 def test_create_benchmark_df(spark):
     schema = TestBenchmarkSchema
-    df = schema.create_benchmark_dataframe(num_records=10)
-    assert df.count() == 10
+    df = schema.create_benchmark_dataframe(spark, num_records=100)
+    assert df.count() == 100
 
 def test_benchmark(spark):
     schema = TestBenchmarkSchema
-    df = schema.create_benchmark_dataframe(num_records=10)
+    df = schema.create_benchmark_dataframe(spark, num_records=10)
     assert isinstance(df, DataFrame)
-    result =  run_benchmark(df)
-    assert result.count() == 3
-    assert isinstance(result, DataFrame)
-    result.show()
+    results = run_benchmark(df)
+    assert results.num_records == 10
+    assert len(results.durations) == 3
+    assert results.avg_duration > 0
+    assert results.median_duration > 0
+    assert results.id is not None
+
